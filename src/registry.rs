@@ -7,16 +7,16 @@ use crate::bindings::Windows::Win32::UI::Shell::{
     SHChangeNotify, SHCNE_ASSOCCHANGED, SHCNF_IDLIST,
 };
 
-const EXT: &str = ".jxl";
+const EXT: &str = ".brs";
 
-const DESCRIPTION: &str = "JPEG XL File";
+const DESCRIPTION: &str = "BRS File";
 const CONTENT_TYPE_KEY: &str = "Content Type";
-const CONTENT_TYPE_VALUE: &str = "image/jxl";
+const CONTENT_TYPE_VALUE: &str = "application/brs";
 const PERCEIVED_TYPE_KEY: &str = "PerceivedType";
 const PERCEIVED_TYPE_VALUE: &str = "image";
 
 const ITHUMBNAILPROVIDER_CLSID: &str = "{e357fccd-a995-4576-b01f-234630154e96}";
-const CLSID: &str = "{DF52DEB1-9D07-4520-B606-97C6ECB069A2}";
+const CLSID: &str = "{5f85282f-0cb4-4e7f-a7f1-09fa662b0af0}";
 
 fn shell_change_notify() {
     unsafe { SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, null_mut(), null_mut()) };

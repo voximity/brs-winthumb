@@ -1,7 +1,7 @@
 [package]
-name = "jxl-winthumb"
-version = "0.1.10"
-authors = ["Kagami Sascha Rosylight <saschanaz@outlook.com>"]
+name = "brs-winthumb"
+version = "0.1.0"
+authors = ["voximity <voximity@gmail.com>"]
 edition = "2018"
 
 [lib]
@@ -10,11 +10,11 @@ crate-type = ["cdylib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+brickadia = { version = "0.1.14", default_features = false }
 intercom = { git = "https://github.com/Rantanen/intercom", rev = "41518eef1dd6984c130d6daf2218b9fb6e47c3bb" }
-simple-logging = "2.0.2"
 log = "0.4.14"
-kagamijxl = "0.2.8"
 image = "0.23.14"
+simple-logging = "2.0.2"
 winreg = "0.9.0"
 windows = "0.19.0"
 

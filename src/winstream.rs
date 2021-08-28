@@ -1,6 +1,8 @@
-use std::io::{ErrorKind, Read};
+use std::io::{self, ErrorKind, Read, Seek, SeekFrom};
 
-use crate::bindings::Windows::Win32::Storage::StructuredStorage::IStream;
+use crate::bindings::Windows::Win32::Storage::StructuredStorage::{
+    IStream, STREAM_SEEK_CUR, STREAM_SEEK_END, STREAM_SEEK_SET,
+};
 
 pub struct WinStream {
     stream: IStream,
@@ -26,5 +28,24 @@ impl Read for WinStream {
             )
         })?;
         Ok(bytes_read as usize)
+    }
+}
+
+impl Seek for WinStream {
+    fn seek(&mut self, pos: SeekFrom) -> io::Result<u64> {
+        let (stream_seek, amount) = match pos {
+            SeekFrom::Current(a) => (STREAM_SEEK_CUR, a),
+            SeekFrom::End(a) => (STREAM_SEEK_END, a),
+            SeekFrom::Start(a) => (STREAM_SEEK_SET, a as i64),
+        };
+
+        let seeked = unsafe { self.stream.Seek(amount, stream_seek) }.map_err(|err| {
+            std::io::Error::new(
+                ErrorKind::Other,
+                format!("IStream::Seek failed: {}", err.code().0),
+            )
+        })?;
+
+        Ok(seeked)
     }
 }

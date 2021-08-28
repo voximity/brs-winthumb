@@ -1,22 +1,22 @@
-# jxl-winthumb
+# brs-winthumb
 
-A JPEG XL (*.jxl) thumbnail handler for Windows File Explorer.
+A Brickadia save (*.brs) thumbnail handler for Windows File Explorer.
+
+### An important note
+
+This is a fork of [saschanaz](https://github.com/saschanaz)'s [jxl-winthumb](https://github.com/saschanaz/jxl-winthumb) tool
+to add a thumbnail handler for JXL files. Windows interop with Rust is hard!
 
 ## How to install
 
-0. Install [Microsoft Visual C++ Redistributable for Visual Studio 2019](https://visualstudio.microsoft.com/downloads/#microsoft-visual-c-redistributable-for-visual-studio-2019) if it's not already installed.
-1. Download the latest dll file from the [releases](https://github.com/saschanaz/jxl-winthumb/releases) page.
-2. Open a terminal window as administrator
-3. Move to your download directory
-4. `regsvr32 jxl_winthumb.dll`, or to uninstall, `regsvr32 /u jxl_winthumb.dll`.
+1. Clone and build using `cargo build --release`.
+2. Open a terminal window as administrator.
+3. Move to `target/release`.
+4. `regsvr32 brs_winthumb.dll`, or to uninstall, `regsvr32 /u brs_winthumb.dll`.
 
 ## Why not Windows Imaging Component?
 
 It was useful before Windows 10 era when Windows Photo Gallery existed, but not anymore as Microsoft now uses its own undocumented way to add system codecs for UWP apps.
-
-## Build environment
-
-Please read [the requirements](https://github.com/saschanaz/jxl-rs/tree/main/libjxl-src) to build the libjxl dependency, or take a look at [the CI configuration](https://github.com/saschanaz/jxl-winthumb/blob/main/.github/workflows/ci.yml).
 
 ## Helpful resources
 

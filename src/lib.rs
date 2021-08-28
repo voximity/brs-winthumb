@@ -1,8 +1,10 @@
 #![crate_type = "dylib"]
 
+use std::io::Cursor;
+
+use brickadia::read::SaveReader;
+use image::GenericImageView;
 use intercom::{prelude::*, raw::HRESULT};
-use kagamijxl::Decoder;
-use std::{cmp::max, io::BufReader};
 
 mod registry;
 mod winstream;
@@ -24,6 +26,8 @@ com_library! {
     class ThumbnailProvider
 }
 
+const MAX_DIMENSION: u32 = 200;
+
 /// Called when the DLL is loaded.
 ///
 /// Sets up logging to the Cargo.toml directory for debug purposes.
@@ -42,7 +46,7 @@ fn on_load() {
 
 #[com_class(
     // A unique identifier solely for jxl-winthumb
-    clsid = "df52deb1-9d07-4520-b606-97c6ecb069a2",
+    clsid = "5f85282f-0cb4-4e7f-a7f1-09fa662b0af0",
     IInitializeWithStream,
     IThumbnailProvider
 )]
@@ -74,59 +78,51 @@ fn reorder(vec: &mut Vec<u8>) {
 }
 
 impl IThumbnailProvider for ThumbnailProvider {
-    fn get_thumbnail(&mut self, cx: u32) -> ComResult<(ComHbitmap, ComWtsAlphatype)> {
-        if self.stream.is_none() {
-            return Err(HRESULT::new(WINCODEC_ERR_WRONGSTATE.0 as i32).into());
-        }
-
-        let stream = self.stream.take().unwrap();
-        let reader = BufReader::new(stream);
-
-        let (info, rgba) = {
-            let mut decoder = Decoder::new();
-            decoder.max_frames = Some(1);
-
-            log::trace!("Decoding started");
-
-            let mut result = decoder.decode_buffer(reader)?;
-            let info = result.basic_info;
-            let buf = result.frames.remove(0).data;
-
-            log::trace!("Decoding finished");
-
-            let rgba = image::RgbaImage::from_raw(info.xsize, info.ysize, buf)
-                .expect("Failed to consume the decoded RGBA buffer");
-            (info, rgba)
+    fn get_thumbnail(&mut self, _cx: u32) -> ComResult<(ComHbitmap, ComWtsAlphatype)> {
+        let stream = match &self.stream {
+            Some(_) => self.stream.take().unwrap(),
+            None => return Err(HRESULT::new(WINCODEC_ERR_WRONGSTATE.0 as i32).into()),
         };
 
-        let mut shrink_ratio = max(info.xsize, info.ysize) as f64 / cx as f64;
-        if shrink_ratio < 1.0 {
-            shrink_ratio = 1.0; // cmp::min does not support floats
-        }
-        let new_size = (
-            (info.xsize as f64 / shrink_ratio).round() as u32,
-            (info.ysize as f64 / shrink_ratio).round() as u32,
-        );
+        let mut reader = SaveReader::new(stream).expect("Failed to create BRS reader");
 
-        log::trace!("Resizing/reordering started");
+        let _header1 = reader.read_header1().expect("Failed to read header 1");
+        let _header2 = reader.read_header2().expect("Failed to read header 2");
+        let preview = reader.read_preview().expect("Failed to read preview");
 
-        let resized =
-            image::imageops::resize(&rgba, new_size.0, new_size.1, image::imageops::Triangle);
-        let mut output = resized.to_vec();
-        reorder(&mut output);
+        let img = image::io::Reader::new(Cursor::new(
+            preview.into_bytes().expect("Save has no preview"),
+        ))
+        .with_guessed_format()
+        .expect("Failed to guess format")
+        .decode()
+        .expect("Failed to decode preview");
 
-        log::trace!("Resizing/reordering finished");
+        let (cw, ch) = (img.width(), img.height());
+        let (w, h) = if cw >= ch && cw > MAX_DIMENSION {
+            let nw = MAX_DIMENSION;
+            let nh = (nw as f32 / cw as f32 * ch as f32) as u32;
+            (nw, nh)
+        } else if ch > cw && ch > MAX_DIMENSION {
+            let nh = MAX_DIMENSION;
+            let nw = (nh as f32 / ch as f32 * cw as f32) as u32;
+            (nw, nh)
+        } else {
+            (cw, ch)
+        };
 
-        // Create a bitmap from the data and return it.
-        //
-        // We'll store the bitmap handle in the struct so that it can destroy the data when it's not needed anymore.
+        let resized = image::imageops::resize(&img, w, h, image::imageops::Triangle);
+
+        let mut bytes = resized.to_vec();
+        reorder(&mut bytes);
+
         let bitmap = unsafe {
             CreateBitmap(
-                new_size.0 as i32,
-                new_size.1 as i32,
+                w as i32,
+                h as i32,
                 1,
                 32,
-                output.as_ptr() as *const _,
+                bytes.as_ptr() as *const _,
             )
         };
         self.bitmap = Some(bitmap);
