@@ -26,7 +26,7 @@ com_library! {
     class ThumbnailProvider
 }
 
-const MAX_DIMENSION: u32 = 200;
+const MAX_DIMENSION: u32 = 800;
 
 /// Called when the DLL is loaded.
 ///
