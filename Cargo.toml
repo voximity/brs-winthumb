@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-brickadia = { version = "0.1.14", default_features = false }
+brickadia = { version = "0.1.16", default_features = false }
 intercom = { git = "https://github.com/Rantanen/intercom", rev = "41518eef1dd6984c130d6daf2218b9fb6e47c3bb" }
 log = "0.4.14"
 image = "0.23.14"

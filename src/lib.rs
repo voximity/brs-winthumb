@@ -86,8 +86,8 @@ impl IThumbnailProvider for ThumbnailProvider {
 
         let mut reader = SaveReader::new(stream).expect("Failed to create BRS reader");
 
-        let _header1 = reader.read_header1().expect("Failed to read header 1");
-        let _header2 = reader.read_header2().expect("Failed to read header 2");
+        reader.skip_header1().expect("Failed to read header 1");
+        reader.skip_header2().expect("Failed to read header 2");
         let preview = reader.read_preview().expect("Failed to read preview");
 
         let img = image::io::Reader::new(Cursor::new(
